@@ -241,11 +241,82 @@ nhanes
 ```
   
 
-* Produce a reader-friendly table for the number of men and women in each education category, and create a visualization of the age distributions for men and women in each education category. Comment on these items.
+* Produce a reader-friendly table for the number of men and women in each education category
+
+```{r}
+nhanes|>
+  group_by(sex, education)|>
+  summarize(n_obs = n_distinct(seqn), .groups = "drop")|>
+  pivot_wider(names_from = education, values_from = n_obs)|>
+  knitr::kable()
+
+```
+
+**Comment:**
+
+  * Among the total 110 female participants, 23 of them have educational level of high school equivalent, 28 have less than high school and 59 have more than high school.
+  * Among the total 118 female participants, 35 of them have educational level of high school equivalent, 27 have less than high school and 56 have more than high school.  
+  * Almost half of the participants have educational level of more than high school in both female (59 out of 110) and male (56 out of 118) subgroups.
+  * In high school equivalent stratum, there is relatively more male than female (35 vs. 23).
+  * The numbers of female and male in each category are similar in less than high school stratum (28 vs. 27) and more than high school stratum (59 vs. 56).
+
+* create a visualization of the age distributions for men and women in each education category.
+
+```{r}
+nhanes|>
+  group_by(sex, education)|>
+  distinct(seqn,sex,age,education)|>
+  ggplot(aes(x = age, fill = education)) + 
+  labs(title = "Age distributions among female and male") +
+  geom_density(alpha = .4) +
+  facet_grid(~sex)+ 
+  viridis::scale_fill_viridis(discrete = TRUE)
+```
+
+**Comment:**
+
+  * The educational level of **more than high school** has a right-skewed shape of age distribution both among female (with a peak at approximately 32) and male (with a peak at approximately 31).
+  * The educational level of **less than high school** and **high school equivalent** have a left-skewed shape of age distribution among female, with a peak at approximately 70 and 72 respectively. 
+  * The educational level of **less than high school** (peaks at 35 and 71) and **high school equivalent** (peaks at 30 and 59) have a bi-modal shape of age distribution among male. 
+  * We can see that the disparity in the distribution of education levels among females is notably more pronounced than that observed in the male group. This suggests that gender may indeed influence educational attainment, with females exhibiting a larger variation in age across different education levels (ie., among female, participants with educational level of more than high school are more likely to be younger, and participants with educational level of less than high school and high school equivalent are more likely to be older).
 
 
 
-* Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate across minutes to create a total activity variable for each participant. Plot these total activities (y-axis) against age (x-axis); your plot should compare men to women and have separate panels for each education level. Include a trend line or a smooth to illustrate differences. Comment on your plot.
+* Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate across minutes to create a total activity variable for each participant. 
+
+  * create a variable `total_activity`:
+    * aggregate activity variable across minutes by `summarise(total_activity=sum(mims_value))`
+```{r}
+total_activity = nhanes|>
+  group_by(seqn,sex,age,education)|>
+  summarise(total_activity=sum(mims_value))
+  
+total_activity
+```
+  * plot total activities (y-axis) against age (x-axis):
+    * create a plot of `age` vs. `total_activity` and compare men to women by `ggplot(aes(x = age, y = total_activity, group = sex, color = sex))`
+    * add points by `geom_point()`
+    * add a smooth by `geom_smooth()`
+    * separate panels for each education level by `facet_grid(~education)`
+  
+```{r}
+total_activity |>
+  ggplot(aes(x = age, y = total_activity, group = sex, color = sex)) + 
+  geom_point(alpha= 0.75) +
+  geom_smooth() +
+  facet_grid(~education) +
+  labs(title = " Plot of age vs. total activities by educational level and sex") 
+```
+
+**Comment:**
+
+* In general, young females and young males exhibit higher levels of total activity across all education groups.
+
+* Specifically, within the 'High school equivalent' and 'More than high school' education groups, total activity levels are slightly higher for females compared to males.
+
+* However, given the considerable overlap in confidence intervals between females and males across all education groups, there is no statistically significant difference in total activity between the genders within these education categories.
+
+* Additionally, both females and males within the 'More than high school' education category display less variability in total activity across age groups, in contrast to the other two education categories.
 
 * Accelerometer data allows the inspection activity over the course of the day. Make a three-panel plot that shows the 24-hour activity time courses for each education level and use color to indicate sex. Describe in words any patterns or conclusions you can make based 
 
