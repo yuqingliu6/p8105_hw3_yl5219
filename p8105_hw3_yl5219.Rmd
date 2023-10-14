@@ -28,6 +28,7 @@ options(
   ggplot2.continuous.fill = "viridis"
 )
 
+
 scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 
@@ -190,10 +191,51 @@ brfss_smart2010 |>
 
 ### Problem 3
 
+* Load, tidy, merge, and otherwise organize the data sets. Your final dataset should include all originally observed variables; exclude participants less than 21 years of age, and those with missing demographic data; and encode data with reasonable variable classes (i.e. not numeric, and using factors with the ordering of tables and plots in mind).
+
+  * load and tidy `nhanes_accel` dataset:
+    * convert the dataset into long format by `pivot longer`
+    * select only the value of `min` variable by `separate(min, into = c("prefix", "min"), sep = 3)` and `select(-prefix)`
+  
 ```{r}
-nhanes_accel = read.csv("./nhanes_accel.csv")
-nhanes_covar = read.csv("./nhanes_covar.csv")
+nhanes_accel = read.csv("./nhanes_accel.csv")|> 
+  pivot_longer(
+    min1:min1440,
+    names_to = "min",
+    values_to = "mims_value"
+  )|>
+  separate(min, into = c("prefix", "min"), sep = 3)|>
+  select(-prefix)
+
+nhanes_accel
+```
+  * load and tidy `nhanes_covar` dataset:
+    * exclude participants less than 21 years of age by `filter(age >= 21)`
+    * excluse those with missing demographic data by `drop_na()`
+    * encode data with reasonable variable classes (i.e. not numeric, and using factors with the ordering of tables and plots in mind).
+    
+```{r}
+nhanes_covar = read.csv("./nhanes_covar.csv", skip = 4)|>
+  janitor::clean_names()|>
+  as_tibble()|>
+  filter(age >= 21)|>
+  drop_na()|>
+  mutate(education = case_match(education, 
+                                1 ~ "less than high school",
+                                2 ~ "high school equivalent",
+                                3 ~ "more than high school"))|>
+  mutate(sex = case_match(sex, 
+                                1 ~ "male",
+                                2 ~ "female"))
+
+nhanes_covar
 ```
 
+* Produce a reader-friendly table for the number of men and women in each education category, and create a visualization of the age distributions for men and women in each education category. Comment on these items.
 
+
+
+* Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate across minutes to create a total activity variable for each participant. Plot these total activities (y-axis) against age (x-axis); your plot should compare men to women and have separate panels for each education level. Include a trend line or a smooth to illustrate differences. Comment on your plot.
+
+* Accelerometer data allows the inspection activity over the course of the day. Make a three-panel plot that shows the 24-hour activity time courses for each education level and use color to indicate sex. Describe in words any patterns or conclusions you can make based 
 
