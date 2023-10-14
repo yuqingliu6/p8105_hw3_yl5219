@@ -2,7 +2,7 @@
 title: "p8105_hw3_yl5219"
 author: "Yuqing Liu"
 date: "2023-10-14"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
