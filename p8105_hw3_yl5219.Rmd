@@ -6,32 +6,108 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggridges)
+library(patchwork)
+
+library(p8105.datasets)
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+	fig.width = 8, 
+  fig.height = 6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+
 ```
 
-## Problem 1
+### Problem 1
+
+#### read in data 
 ```{r}
 library(p8105.datasets)
 data("instacart")
+
+instacart = 
+  instacart |> 
+  as_tibble()
 ```
 
 * a short description of the dataset:
 
-  *
+  * The dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns, with each row resprenting a single product from an instacart order. 
+  * Variables include identifiers for user, order, and product; the order in which each product was added to the cart. There are several order-level variables, describing the day and time of the order, and number of days since prior order. Then there are several item-specific variables, describing the product name (e.g. Yogurt, Avocado), department (e.g. dairy and eggs, produce), and aisle (e.g. yogurt, fresh fruits), and whether the item has been ordered by this user in the past. 
+  * In total, there are `r instacart |> select(product_id) |> distinct() |> count()` products found in `r instacart |> select(user_id, order_id) |> distinct() |> count()` orders from `r instacart |> select(user_id) |> distinct() |> count()` distinct users.
+
 
 * How many aisles are there, and which aisles are the most items ordered from?
 
+In total, there are `r instacart |> select(aisle) |> distinct() |> count()`  aisles, with fresh vegetables and fresh fruits holding the most items ordered by far.
+
+```{r}
+instacart |> 
+  count(aisle) |> 
+  arrange(desc(n))
+```
+
 * Make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
+
+```{r}
+instacart |> 
+  count(aisle) |> 
+  filter(n > 10000) |> 
+  mutate(aisle = fct_reorder(aisle, n)) |> 
+  ggplot(aes(x = aisle, y = n)) + 
+  geom_point() + 
+  labs(title = "Number of items ordered in each aisle") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+
+```
 
 * Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
 
+```{r}
+instacart |> 
+  filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) |>
+  group_by(aisle) |> 
+  count(product_name) |> 
+  mutate(rank = min_rank(desc(n))) |> 
+  filter(rank < 4) |> 
+  arrange(desc(n)) |>
+  knitr::kable()
+```
+
 * Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
 
-## Problem 2
+```{r}
+instacart |>
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) |>
+  group_by(product_name, order_dow) |>
+  summarize(mean_hour = mean(order_hour_of_day)) |>
+  pivot_wider(
+    names_from = order_dow, 
+    values_from = mean_hour) |>
+  knitr::kable(digits = 2)
+```
+
+### Problem 2
 
 ```{r}
 library(p8105.datasets)
 data("brfss_smart2010")
+
+brfss_smart2010
 ```
 
 First, do some data cleaning:
@@ -41,14 +117,49 @@ First, do some data cleaning:
 * include only responses from “Excellent” to “Poor”
 * organize responses as a factor taking levels ordered from “Poor” to “Excellent”
 
+```{r}
+brfss_smart2010 = brfss_smart2010 |> 
+  as_tibble()|>
+  filter(Topic == "Overall Health")|> 
+  filter(Response %in% c("Excellent", "Very good", "Good", "Fair", "Poor"))|>
+  mutate(Response = factor(Response, levels = c("Excellent", "Very good", "Good", "Fair", "Poor")))
+
+brfss_smart2010
+```
+
+
 
 Using this dataset, do or answer the following (commenting on the results of each):
 
 * In 2002, which states were observed at 7 or more locations? What about in 2010?
+
+```{r}
+brfss_smart2010|>
+  filter(Year == 2002)|>
+  group_by(Locationabbr)|>
+  summarize(n = n_distinct(Locationdesc))|>
+  filter(n>=7)
+```
+
+In 2002, states CT FL MA NC NJ PA were observed at 7 or more locations.
+
+```{r}
+brfss_smart2010|>
+  filter(Year == 2010)|>
+  group_by(Locationabbr)|>
+  summarize(n = n_distinct(Locationdesc))|>
+  filter(n>=7)
+```
+In 2002, states CA CO FL MA	MD NC	NE NJ	NY OH were observed at 7 or more locations.
+
 * Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
+
+
 * Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
 
-## Problem 3
+
+
+### Problem 3
 
 ```{r}
 nhanes_accel = read.csv("./nhanes_accel.csv")
