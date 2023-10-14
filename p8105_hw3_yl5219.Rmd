@@ -194,11 +194,13 @@ brfss_smart2010 |>
 * Load, tidy, merge, and otherwise organize the data sets. Your final dataset should include all originally observed variables; exclude participants less than 21 years of age, and those with missing demographic data; and encode data with reasonable variable classes (i.e. not numeric, and using factors with the ordering of tables and plots in mind).
 
   * load and tidy `nhanes_accel` dataset:
+    * clean the variable names by `janitor::clean_names()`
     * convert the dataset into long format by `pivot longer`
     * select only the value of `min` variable by `separate(min, into = c("prefix", "min"), sep = 3)` and `select(-prefix)`
   
 ```{r}
 nhanes_accel = read.csv("./nhanes_accel.csv")|> 
+  janitor::clean_names()|>
   pivot_longer(
     min1:min1440,
     names_to = "min",
@@ -210,9 +212,10 @@ nhanes_accel = read.csv("./nhanes_accel.csv")|>
 nhanes_accel
 ```
   * load and tidy `nhanes_covar` dataset:
+    * clean the variable names by `janitor::clean_names()`
     * exclude participants less than 21 years of age by `filter(age >= 21)`
     * excluse those with missing demographic data by `drop_na()`
-    * encode data with reasonable variable classes (i.e. not numeric, and using factors with the ordering of tables and plots in mind).
+    * encode `education` and  `sex` with reasonable variable classes by mutating `education` and `sex` with corresponding class names by `case_match()`
     
 ```{r}
 nhanes_covar = read.csv("./nhanes_covar.csv", skip = 4)|>
@@ -230,6 +233,13 @@ nhanes_covar = read.csv("./nhanes_covar.csv", skip = 4)|>
 
 nhanes_covar
 ```
+  * merge `nhanes_accel` and `nhanes_covar` dataset together:
+  
+```{r}
+nhanes = inner_join(nhanes_accel, nhanes_covar, by = "seqn")
+nhanes
+```
+  
 
 * Produce a reader-friendly table for the number of men and women in each education category, and create a visualization of the age distributions for men and women in each education category. Comment on these items.
 
