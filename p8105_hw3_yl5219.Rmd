@@ -195,7 +195,11 @@ df |>
   geom_line() + geom_point(size = 0.5)
 ```
 
+**Comment:**
 
+The average data_value for an excellent response varies between 2002 and 2010. In most states, the average data_value for an excellent response falls within the range of approximately 17 to 27.
+
+<br>
 
 * Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
 
@@ -218,6 +222,13 @@ brfss_smart2010 |>
   theme_minimal()
 ```
 
+**Comment:**
+
+  * In both 2006 and 2010, the median data values are lowest for 'Poor' responses, while 'Good,' 'Very Good,' and 'Excellent' responses consistently exhibit significantly higher data values compared to 'Poor' or 'Fair' responses.
+
+  * Notably, in 2010, 'Fair' responses show increased variation compared to 2002. Conversely, 'Good' responses in 2010 display reduced variation compared to 2002.
+
+  * Moreover, in 2010, 'Very Good' responses have a higher median and greater variation compared to 2002.
 
 ### Problem 3
 
