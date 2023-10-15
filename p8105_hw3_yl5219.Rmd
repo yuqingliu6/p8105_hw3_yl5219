@@ -118,7 +118,7 @@ First, do some data cleaning:
 * format the data to use appropriate variable names by `janitor::clean_names()`;
 * focus on the “Overall Health” topic by `filter(topic == "Overall Health")`
 * include only responses from “Excellent” to “Poor” by ` filter(response %in% c("Excellent", "Very good", "Good", "Fair", "Poor"))`
-* organize responses as a factor taking levels ordered from “Poor” to “Excellent” by `factor()` function
+* organize responses as a factor taking levels ordered from “Poor” to “Excellent” by `mutate(response = factor(response, levels = c("Excellent", "Very good", "Good", "Fair", "Poor")))` function
 
 ```{r}
 brfss_smart2010 = brfss_smart2010 |> 
@@ -138,7 +138,7 @@ Using this dataset, do or answer the following (commenting on the results of eac
 * In 2002, which states were observed at 7 or more locations?
   
   * filter only the year 2002 by `filter()`
-  * group the data by states by `group_by`
+  * group the data by states `locationabbr` by `group_by()`
   * find the distinct number of different locations by `summarize(n = n_distinct(locationdesc)`
   * filter only the results with 7 or more locations by `filter(n>=7)`
 
@@ -149,13 +149,14 @@ brfss_smart2010|>
   summarize(n = n_distinct(locationdesc))|>
   filter(n>=7)
 ```
+**Comment**
 
 In 2002, CT(Connecticut), FL(Florida), MA(Massachusetts), NC(North Carolina), NJ(New Jersey), PA(Pennsylvania) states were observed at 7 or more locations.
 
 *  In 2010, which states were observed at 7 or more locations?
 
   * similarly, filter only the year 2010 by `filter()`
-  * group the data by states by `group_by`
+  * group the data by states `locationabbr` by `group_by()`
   * find the distinct number of different locations by `summarize(n = n_distinct(locationdesc)`
   * filter only the results with 7 or more locations by `filter(n>=7)`
   
@@ -166,7 +167,12 @@ brfss_smart2010|>
   summarize(n = n_distinct(locationdesc))|>
   filter(n>=7)
 ```
-In 2002, CA(California), CO(Colorado), FL(Florida), MA(Massachusetts),	MD(Maryland), NC(North Carolina), NE(Nevada), NJ(New Jersey), NY(New York), OH(Ohio) states were observed at 7 or more locations.
+
+**Comment**
+
+In 2010, CA(California), CO(Colorado), FL(Florida), MA(Massachusetts),	MD(Maryland), NC(North Carolina), NE(Nevada), NJ(New Jersey), NY(New York), OH(Ohio) states were observed at 7 or more locations.
+
+<br>
 
 * Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. 
 
@@ -195,16 +201,17 @@ df |>
   geom_line() + geom_point(size = 0.5)
 ```
 
-**Comment:**
+**Comment**
 
-The average data_value for an excellent response varies between 2002 and 2010. In most states, the average data_value for an excellent response falls within the range of approximately 17 to 27.
+* The average data_value for an excellent response varies between 2002 and 2010. In most states, the average data_value for an excellent response falls within the range of approximately 17 to 27.
+* The average data_value for an excellent response also varies over states. Wyoming (WY) seems to have the lowest average data_value for an excellent response, and Alaska (AK) seems to have the highest average data_value for an excellent response over the years from 2002 to 2010. 
 
 <br>
 
 * Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
 
-  * filter only the New York State by `filter(locationabbr=="NY"`
-  * filter only the year in 2006 and 2010 by `filter(locationabbr=="NY"`
+  * filter only the New York State by `filter(locationabbr=="NY)"`
+  * filter only the year in 2006 and 2010 by `filter(year %in% c(2006,2010))"`
   * make boxplots showing distribution of data_value for responses by `ggplot( aes(x = response, y = data_value)) + geom_boxplot()`
   * make a two-panel plot by two years through `facet_wrap(~year, ncol = 2)` 
 
@@ -236,7 +243,7 @@ brfss_smart2010 |>
 
   * load and tidy `nhanes_accel` dataset:
     * clean the variable names by `janitor::clean_names()`
-    * convert the dataset into long format by `pivot longer`
+    * convert the dataset into long format by `pivot_longer()`
     * select only the value of `min` variable by `separate(min, into = c("prefix", "min"), sep = 3)` and `select(-prefix)`
   
 ```{r}
@@ -256,7 +263,7 @@ nhanes_accel
     * clean the variable names by `janitor::clean_names()`
     * exclude participants less than 21 years of age by `filter(age >= 21)`
     * excluse those with missing demographic data by `drop_na()`
-    * encode `education` and  `sex` with reasonable variable classes by mutating `education` and `sex` with corresponding class names by `case_match()`
+    * encode `education` and  `sex` with reasonable variable classes by mutating `education` and `sex` with corresponding class names by `case_match()` in `mutate()` function
     
 ```{r}
 nhanes_covar = read.csv("./nhanes_covar.csv", skip = 4)|>
@@ -286,6 +293,10 @@ nhanes
   
 
 * Produce a reader-friendly table for the number of men and women in each education category
+
+  * groups data by `sex` and `education` by `group_by(sex, education)`
+  * calculates the count of unique observations, pivots the results to form a wider table by `summarize(n_obs = n_distinct(seqn))`
+  * displays it as a table using `knitr::kable()`
 
 ```{r}
 nhanes|>
@@ -330,7 +341,7 @@ nhanes|>
   * The educational level of **less than high school** (peaks at 35 and 71) and **high school equivalent** (peaks at 30 and 59) have a bi-modal shape of age distribution among male. 
   * We can see that the disparity in the distribution of education levels among females is notably more pronounced than that observed in the male group. This suggests that gender may indeed influence educational attainment, with females exhibiting a larger variation in age across different education levels (ie., among female, participants with educational level of more than high school are more likely to be younger, and participants with educational level of less than high school and high school equivalent are more likely to be older).
 
-
+<br>
 
 * Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate across minutes to create a total activity variable for each participant. 
 
