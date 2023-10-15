@@ -105,6 +105,7 @@ instacart |>
 
 ### Problem 2
 
+## read in data
 ```{r}
 library(p8105.datasets)
 data("brfss_smart2010")
@@ -134,7 +135,12 @@ brfss_smart2010
 
 Using this dataset, do or answer the following (commenting on the results of each):
 
-* In 2002, which states were observed at 7 or more locations? What about in 2010?
+* In 2002, which states were observed at 7 or more locations?
+  
+  * filter only the year 2002 by `filter()`
+  * group the data by states by `group_by`
+  * find the distinct number of different locations by `summarize(n = n_distinct(locationdesc)`
+  * filter only the results with 7 or more locations by `filter(n>=7)`
 
 ```{r}
 brfss_smart2010|>
@@ -146,6 +152,13 @@ brfss_smart2010|>
 
 In 2002, CT(Connecticut), FL(Florida), MA(Massachusetts), NC(North Carolina), NJ(New Jersey), PA(Pennsylvania) states were observed at 7 or more locations.
 
+*  In 2010, which states were observed at 7 or more locations?
+
+  * similarly, filter only the year 2010 by `filter()`
+  * group the data by states by `group_by`
+  * find the distinct number of different locations by `summarize(n = n_distinct(locationdesc)`
+  * filter only the results with 7 or more locations by `filter(n>=7)`
+  
 ```{r}
 brfss_smart2010|>
   filter(year == 2010)|>
@@ -155,16 +168,27 @@ brfss_smart2010|>
 ```
 In 2002, CA(California), CO(Colorado), FL(Florida), MA(Massachusetts),	MD(Maryland), NC(North Carolina), NE(Nevada), NJ(New Jersey), NY(New York), OH(Ohio) states were observed at 7 or more locations.
 
-* Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
+* Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. 
 
+  * limit to Excellent responses by ` filter(response == "Excellent")`
+  * group the data by year and states by ` group_by(year, locationabbr)`
+  * create a summary table with a variable that averages the data_value by `summarize(data_value_mean=mean(data_value, na.rm = TRUE))`
+  
 ```{r}
 df = brfss_smart2010|>
   filter(response == "Excellent")|>
   group_by(year, locationabbr)|>
-  summarize(data_value_mean=mean(data_value, na.rm = TRUE))
+  summarize(data_value_mean=mean(data_value, na.rm = TRUE ), .groups = "drop")
 
 df
 ```
+
+* Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
+
+  * create a plot of mean data value over the year among different states by ` ggplot(aes(x = year, y = data_value_mean, group = locationabbr, color = locationabbr))`
+  * add `geom_line()` to create spaghetti-like lines
+  * add `geom_point()` to add little dots
+
 ```{r}
 df |> 
   ggplot(aes(x = year, y = data_value_mean, group = locationabbr, color = locationabbr)) +
@@ -175,10 +199,16 @@ df |>
 
 * Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
 
+  * filter only the New York State by `filter(locationabbr=="NY"`
+  * filter only the year in 2006 and 2010 by `filter(locationabbr=="NY"`
+  * make boxplots showing distribution of data_value for responses by `ggplot( aes(x = response, y = data_value)) + geom_boxplot()`
+  * make a two-panel plot by two years through `facet_wrap(~year, ncol = 2)` 
+
 ```{r}
 # Create a two-panel plot
 brfss_smart2010 |>
-  filter(locationabbr=="NY"& year %in% c(2006,2010))|>
+  filter(locationabbr=="NY")|>
+  filter(year %in% c(2006,2010))|>
   ggplot( aes(x = response, y = data_value)) +
   geom_boxplot() +
   facet_wrap(~year, ncol = 2) +
