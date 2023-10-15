@@ -234,9 +234,12 @@ nhanes_covar = read.csv("./nhanes_covar.csv", skip = 4)|>
 nhanes_covar
 ```
   * merge `nhanes_accel` and `nhanes_covar` dataset together:
+    * merge the datasets together by `inner_join()` to include variables values that exists in both datasets
+    * relevel the `education` by `forcats::fct_relevel()` so that it is ordered from lower to higher educational attainment instead of being ordered alphabetically
   
 ```{r}
-nhanes = inner_join(nhanes_accel, nhanes_covar, by = "seqn")
+nhanes = inner_join(nhanes_accel, nhanes_covar, by = "seqn")|>
+  mutate(education = forcats::fct_relevel(education, c("less than high school", "high school equivalent", "more than high school"))) 
 nhanes
 ```
   
@@ -260,13 +263,19 @@ nhanes|>
   * In high school equivalent stratum, there is relatively more male than female (35 vs. 23).
   * The numbers of female and male in each category are similar in less than high school stratum (28 vs. 27) and more than high school stratum (59 vs. 56).
 
-* create a visualization of the age distributions for men and women in each education category.
+<br>
 
+* create a visualization of the age distributions for men and women in each education category.
+  * group the data by `sex` and `education` by `group_by()`
+  * find the distinct variables like `seqn`by `distinct()`
+  * plot the age distribution by education using `ggplot(aes(x = age, group = education, fill = education))`
+  * make two separate plots by `sex` using `facet_grid()`
+  
 ```{r}
 nhanes|>
   group_by(sex, education)|>
   distinct(seqn,sex,age,education)|>
-  ggplot(aes(x = age, fill = education)) + 
+  ggplot(aes(x = age, group = education, fill = education)) + 
   labs(title = "Age distributions among female and male") +
   geom_density(alpha = .4) +
   facet_grid(~sex)+ 
@@ -285,6 +294,7 @@ nhanes|>
 * Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate across minutes to create a total activity variable for each participant. 
 
   * create a variable `total_activity`:
+    * group the data by `seqn` `sex` `age` and `education` by `group_by`
     * aggregate activity variable across minutes by `summarise(total_activity=sum(mims_value))`
 ```{r}
 total_activity = nhanes|>
@@ -298,6 +308,7 @@ total_activity
     * add points by `geom_point()`
     * add a smooth by `geom_smooth()`
     * separate panels for each education level by `facet_grid(~education)`
+    * add title by `labs(title = "Plot of age vs. total activities by educational level and sex")`
   
 ```{r warning = FALSE, message = FALSE}
 total_activity |>
@@ -318,10 +329,12 @@ total_activity |>
 
 * Additionally, both females and males within the 'More than high school' education category display less variability in total activity across age groups, in contrast to the other two education categories.
 
-<break>
+<br>
 
 * Make a three-panel plot that shows the 24-hour activity time courses for each education level and use color to indicate sex. Describe in words any patterns or conclusions you can make based:
 
+    * group the data by `group_by`
+    * create a summary data frame with the mean MIMS values by `summarize(mims_value = mean(mims_value))`
     * create a plot of `mims_value` activity across 24-hour `min` and compare men to women by `ggplot(aes(x = min, y = mims_value, group = sex, color = sex))`
     * add points by `geom_point()`
     * add a smooth by `geom_smooth()`
@@ -330,18 +343,18 @@ total_activity |>
 ```{r warning = FALSE, message = FALSE}
 nhanes |>
   group_by(min, sex, education)|>
-  summarize(mims_value = sum(mims_value), .groups = "drop")|>
-  ggplot(aes(x = min, y = mims_value, group = sex, color = sex)) +
+  summarize(mims_value = mean(mims_value), .groups = "drop")|>
+  ggplot(aes(x = as.numeric(min), y = mims_value, group = sex, color = sex)) +
   geom_point(alpha =0.75, size = 1.5) + geom_smooth()+
-  facet_grid(~education)
+  facet_grid(~education)+
+  scale_x_continuous(breaks = seq(0, 1500, by = 200))
 ```
+
 
 **Comment**
 
-* Both females and males tend to exhibit higher MIMS values between 8:30 and 20:00 (equivalent to 510 to 1200 minutes) across all education groups.
-
-* The MIMS values show a significant increase starting at 4:00, reaching their peak around 8:30, followed by a gradual decrease from 8:30 to 20:00 and a sharp drop after 20:00.
+* Both females and males tend to exhibit higher MIMS values between 8:30 and 20:00, which is also known as between the 510th to the 1200th minute of the day, across all education groups. The MIMS values show a significant increase starting at 4:00 (240th minute), reaching their peak around 8:30, followed by a gradual decrease from 8:30 to 20:00 and a sharp drop after 20:00.
 
 * Within the 'Less than high school' education category, both females and males tend to have higher peak MIMS values compared to the other two education categories. This suggests a potential association between educational attainment and differences in peak MIMS values, with lower education levels potentially correlating with higher peak MIMS scores.
 
-* Conversely, in the 'High school equivalent' and 'More than high school' education categories, females tend to exhibit higher MIMS values than males between 8:30 and 20:00, while MIMS values are similar between genders in the 'Less than high school' education category.
+* Female seems to have higher variations in MIMS values across different time as we can see the MIMS score among female is a little bit lower than male before 4:00 while the MIMS score among female is higher than male between 8:30 and 20:00. And later after 20:00 MIMS score among female again becomes a little bit lower than that among male. This trend appear in all three educational groups. Worth noticing, females tend to exhibit much higher MIMS values than males between 8:30 and 20:00 in all three educational groups.
